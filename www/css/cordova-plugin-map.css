@@ -1,0 +1,66 @@
+*, *::after, *::before {
+  box-sizing: inherit;
+}
+
+.cordova-plugin-map-layout-withOrientation {
+  flex-direction: column;
+}
+.cordova-plugin-map-layout-oppositeOrientation {
+  flex-direction: row;
+}
+@media (orientation: landscape) {
+  .cordova-plugin-map-layout-withOrientation {
+    flex-direction: row;
+  }
+  .cordova-plugin-map-layout-oppositeOrientation {
+    flex-direction: column;
+  }
+}
+
+.cordova-plugin-map-nativePopUp {
+  background: #000;
+  box-sizing: border-box;
+  display: none;
+  height: 100vh;
+  left: 0;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 99999;
+}
+
+.cordova-plugin-map-nativePopUp-open {
+  display: flex;
+}
+
+@media (orientation: landscape) {}
+
+.cordova-plugin-map-nativePopUp__button,
+.cordova-plugin-map-nativePopUp__content {
+  margin: 5px;
+}
+
+.cordova-plugin-map-nativePopUp__content {
+  background: #00a;
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.cordova-plugin-map-nativePopUp__buttons {
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 1;
+}
+
+.cordova-plugin-map-nativePopUp__button {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button[data-action=cancel] {
+}
+button[data-action=done] {
+}

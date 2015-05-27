@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    id="cordova-plugin-map"
+    version="0.1.0">
+    <name>MapPlugin</name>
+    <description>Cordova Map Plugin</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,map</keywords>
+
+    <js-module src="www/map.js" name="map">
+        <clobbers target="navigator.map" />
+    </js-module>
+
+    <!-- windows -->
+    <platform name="windows">
+        <js-module src="src/windows/mapProxy.js" name="MapProxy">
+            <merges target="" />
+        </js-module>
+        <asset src="www/css/cordova-plugin-map.css" target="css/cordova-plugin-map.css" />
+    </platform>
+
+    <!-- other platforms -->
+
+</plugin>
