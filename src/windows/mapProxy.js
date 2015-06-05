@@ -82,6 +82,14 @@
 
     map = function (options) {};
 
+    map.setOptions = function (options) {
+        config.keys.forEach(function(k) {
+            if (options[k]) {
+                config[k] = options[k];
+            }
+        });
+    };
+
     map.confirmLocation = function (onSuccess, onError, options) {
         var initMap;
 
