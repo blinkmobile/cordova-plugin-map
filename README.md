@@ -10,6 +10,21 @@ cordova plugin add cordova-plugin-map
 
 Initialization of the Map plugin object can happen in any function which is called after the device is ready.
 
+following options must be provided by the user, either using `setOptions()` or `Map.confirmLocation(onSuccess, onError, options)` &gt; `options`
+
+- latitude (mandatory)
+- longitude (mandatory)
+- bingMapKey (mandatory)
+
+## Map.setOptions
+
+Map.setOptions will set the options globally so user don't have to provide the `options` everytime during `Map.confirmLocation` call
+
+- latitude
+- longitude
+- bingMapKey
+- scale
+
 ## Map.confirmLocation
 
 Map.confirmLocation will display a dialog which will draw a bing map based on input options. This allows the user to correct the geolocation information.
@@ -59,25 +74,24 @@ Create a button on your page
 Then add click event
 
 ```javascript
+navigator.map.setOptions({"bingMapKey":"BING_MAP_KEY"});
+
 document.getElementById("cordova-plugin-map-open").addEventListener("click", confirmLocation, false);
 
 function confirmLocation(){
-  navigator.map.confirmLocation(getLocation, onFail, {latitude:-33.4272, longitude:151.3428,  bingMapKey:"AnnB69EpEvcSWECyb7esv5AGzKccK4Vt7m_Cxhk-QtYk-dZzs4HA139yfI5YXRxS"});
+  navigator.map.confirmLocation(getLocation, onFail, {latitude:-33.4272, longitude:151.3428});
 }
 
-function getLocation(location){
-  setTimeout(function() {
-    if(!location)
-      console.log("user canceled dialog");
-    else
-      console.log("plugin returned latitude: "+location.latitude+", longitude: "+location.longitude);
-  }, 0);
-
+function getLocation(location) {
+    if(!location) {
+      console.warn("PLUGIN:MAP: User cancelled dialog!");
+    } else {
+      console.log("PLUGIN:MAP: latitude: " + location.latitude + ", longitude: " + location.longitude);
+    }
 }
 
 function onFail(message) {
-    setTimeout(function() {
-      console.log('plugin message: ' + message);
-    }, 0);
+    console.error('PLUGIN:MAP: ' + message);
 }
+
 ```
