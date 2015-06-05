@@ -82,8 +82,8 @@
 
     map = function (options) {};
 
-    map.setOptions = function (options) {
-        config.keys.forEach(function(k) {
+    map.setOptions = function (onSuccess, onError, options) {
+        Object.keys(config).forEach(function(k) {
             if (options[k]) {
                 config[k] = options[k];
             }
@@ -94,25 +94,25 @@
         var initMap;
 
         //check to see if latitude is provided
-        if (options.latitude) {
+        if (options && options.latitude) {
             config.latitude = options.latitude;
         } else if(!config.latitude) {
             onError("latitude must be provided");
         }
         //check to see longitude is provided
-        if (options.longitude) {
+        if (options && options.longitude) {
             config.longitude = options.longitude;
         } else if(!config.longitude) {
             onError("longitude must be provided");
         }
         //check to see bingMapKey is available
-        if (options.bingMapKey) {
+        if (options && options.bingMapKey) {
             config.bingMapKey = options.bingMapKey;
         } else if (!config.bingMapKey) {
             onError("map key must be provided");
         }
 
-        if (options.scale) {
+        if (options && options.scale) {
             config.scale = options.scale;
         }
 
@@ -172,5 +172,6 @@
 }());
 
 cordova.commandProxy.add("MapPlugin", {
-    confirmLocation: navigator.map.confirmLocation
+  setOptions: navigator.map.setOptions,
+  confirmLocation: navigator.map.confirmLocation
 });

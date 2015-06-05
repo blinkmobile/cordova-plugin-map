@@ -20,6 +20,10 @@ following options must be provided by the user, either using `setOptions()` or `
 
 Map.setOptions will set the options globally so user don't have to provide the `options` everytime during `Map.confirmLocation` call
 
+```javascript
+navigator.map.setOptions(onSuccess, onError, options);
+```
+The Options are:
 - latitude
 - longitude
 - bingMapKey
@@ -74,7 +78,7 @@ Create a button on your page
 Then add click event
 
 ```javascript
-navigator.map.setOptions({"bingMapKey":"BING_MAP_KEY"});
+navigator.map.setOptions(null, null, {"bingMapKey":"BING_MAP_KEY"});
 
 document.getElementById("cordova-plugin-map-open").addEventListener("click", confirmLocation, false);
 
