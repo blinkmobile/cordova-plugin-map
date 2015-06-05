@@ -1,12 +1,33 @@
 (function () {
     'use strict';
-    var divId = "cordova-plugin-map-mapDiv", lat = -33.4270, long = 151.3428, scale = 17;
-    var bingMapKey = "AnnB69EpEvcSWECyb7esv5AGzKccK4Vt7m_Cxhk-QtYk-dZzs4HA139yfI5YXRxS";
-    var pinLocation;
-    var initCenter;
-    var confirmOnSuccess, confirmOnError, confirmOptions;
+    var config,
+        callbacks,
+        divId = "cordova-plugin-map-mapDiv",
+        pinLocation,
+        initCenter,
+        map,
+        html,
+        popupHtml;
 
-    var html = '<link rel="stylesheet" href="css/cordova-plugin-map.css" />';
+
+    config = {
+        'latitude': null,
+        'longitude': null,
+        'scale': 17,
+        'bingMapKey': null
+    };
+
+    callbacks = {
+        'confirmOnSuccess': function () {
+        },
+        'confirmOnError': function () {
+        },
+        'confirmOptions': {}
+    };
+
+    html = '<link rel="stylesheet" href="css/cordova-plugin-map.css" />';
+
+    popupHtml = '<div id="cordova-plugin-map-popup" class="cordova-plugin-map-nativePopUp cordova-plugin-map-layout-withOrientation"><div id="cordova-plugin-map-mapDiv" class="cordova-plugin-map-nativePopUp__content"></div><div class="cordova-plugin-map-nativePopUp__buttons cordova-plugin-map-layout-oppositeOrientation"><button data-action="done"  class="cordova-plugin-map-nativePopUp__button">done</button><button data-action="cancel" class="cordova-plugin-map-nativePopUp__button">cancel</button></div></div>';
 
     function appendVeapicoreJs() {
         var head = document.getElementsByTagName('head').item(0);
@@ -20,11 +41,6 @@
         document.head.insertAdjacentHTML('beforeend', html);
         appendVeapicoreJs();
     });
-
-    var popupHtml = '<div id="cordova-plugin-map-popup" class="cordova-plugin-map-nativePopUp cordova-plugin-map-layout-withOrientation"><div id="cordova-plugin-map-mapDiv" class="cordova-plugin-map-nativePopUp__content"></div><div class="cordova-plugin-map-nativePopUp__buttons cordova-plugin-map-layout-oppositeOrientation"><button data-action="done"  class="cordova-plugin-map-nativePopUp__button">done</button><button data-action="cancel" class="cordova-plugin-map-nativePopUp__button">cancel</button></div></div>';
-
-    function callbackFunction() {
-    };
 
     function openPopup() {
         MSApp.execUnsafeLocalFunction(function () {
@@ -42,16 +58,16 @@
 
     function resizePopup() {
         deletePopup();
-        confirmLocation(confirmOnSuccess, confirmOnError, confirmOptions);
+        confirmLocation(callbacks.confirmOnSuccess, callbacks.confirmOnError, callbacks.confirmOptions);
     }
 
     function closePopup() {
-        callbackFunction({latitude: pinLocation.latitude, longitude: pinLocation.longitude});
+        callbacks.confirmOnSuccess({latitude: pinLocation.latitude, longitude: pinLocation.longitude});
         deletePopup();
     }
 
     function cancelPopup() {
-        callbackFunction(null);
+        callbacks.confirmOnSuccess(null);
         deletePopup();
     }
 
@@ -64,34 +80,37 @@
         });
     }
 
+    map = function (options) {};
 
-    function Map(options) {
-    }
+    map.confirmLocation = function (onSuccess, onError, options) {
+        var initMap;
 
-
-    Map.confirmLocation = function (onSuccess, onError, options) {
+        //check to see if latitude is provided
         if (options.latitude) {
-            lat = options.latitude;
-        } else {
+            config.latitude = options.latitude;
+        } else if(!config.latitude) {
             onError("latitude must be provided");
         }
+        //check to see longitude is provided
         if (options.longitude) {
-            long = options.longitude;
-        } else {
+            config.longitude = options.longitude;
+        } else if(!config.longitude) {
             onError("longitude must be provided");
         }
+        //check to see bingMapKey is available
         if (options.bingMapKey) {
-            bingMapKey = options.bingMapKey;
-        } else {
+            config.bingMapKey = options.bingMapKey;
+        } else if (!config.bingMapKey) {
             onError("map key must be provided");
         }
-        if (options.scale)
-            scale = options.scale;
 
-        callbackFunction = onSuccess;
-        confirmOnSuccess = onSuccess;
-        confirmOnError = onError;
-        confirmOptions = options;
+        if (options.scale) {
+            config.scale = options.scale;
+        }
+
+        callbacks.confirmOnSuccess = onSuccess;
+        callbacks.confirmOnError = onError;
+        callbacks.confirmOptions = options;
 
         openPopup();
 
@@ -99,23 +118,29 @@
             setTimeout('', 100);
         }
 
-        Microsoft.Maps.loadModule('Microsoft.Maps.Map', {callback: initMap, culture: "en-us", homeRegion: "AU"});
+        initMap = function () {
+            var bingMap, DisplayLoc;
 
-        function initMap() {
-            var bingMap;
-            if (!initCenter)
-                initCenter = new Microsoft.Maps.Location(lat, long);
-            if (!pinLocation)
-                pinLocation = new Microsoft.Maps.Location(lat, long);
+            DisplayLoc = function (e) {
+                if (e.targetType == 'pushpin') {
+                    pinLocation = e.target.getLocation();
+                }
+            };
+
+            if (!initCenter) {
+                initCenter = new Microsoft.Maps.Location(config.latitude, config.longitude);
+            }
+            if (!pinLocation) {
+                pinLocation = new Microsoft.Maps.Location(config.latitude, config.longitude);
+            }
 
             var mapDiv = document.getElementById(divId);
             var rect = mapDiv.getBoundingClientRect();
 
-            var mapOptions =
-            {
-                credentials: bingMapKey,
+            var mapOptions = {
+                credentials: config.bingMapKey,
                 center: pinLocation,
-                zoom: scale,
+                zoom: config.scale,
                 height: rect.height,
                 width: rect.width
             };
@@ -129,17 +154,12 @@
             Microsoft.Maps.Events.addHandler(pin, 'mouseup', DisplayLoc);
 
             bingMap.entities.push(pin);
-        }
+        };
 
-        function DisplayLoc(e) {
-            if (e.targetType == 'pushpin') {
-                pinLocation = e.target.getLocation();
-            }
-            return;
-        }
+        Microsoft.Maps.loadModule('Microsoft.Maps.Map', {callback: initMap, culture: "en-us", homeRegion: "AU"});
     };
 
-    navigator.map = Map;
+    navigator.map = map;
 
 }());
 
