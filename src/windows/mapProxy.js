@@ -120,11 +120,12 @@
         callbacks.confirmOnError = onError;
         callbacks.confirmOptions = options;
 
-        openPopup();
-
-        while (typeof Microsoft == 'undefined' || !Microsoft) {
-            setTimeout('', 100);
+        if (typeof Microsoft === 'undefined' || !Microsoft) {
+            onError('bing maps API unavailable');
+            return;
         }
+
+        openPopup();
 
         initMap = function () {
             var bingMap, DisplayLoc;
