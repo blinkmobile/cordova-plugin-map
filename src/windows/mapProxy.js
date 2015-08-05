@@ -98,18 +98,21 @@
             config.latitude = options.latitude;
         } else if(!config.latitude) {
             onError("latitude must be provided");
+            return;
         }
         //check to see longitude is provided
         if (options && options.longitude) {
             config.longitude = options.longitude;
         } else if(!config.longitude) {
             onError("longitude must be provided");
+            return;
         }
         //check to see bingMapKey is available
         if (options && options.bingMapKey) {
             config.bingMapKey = options.bingMapKey;
         } else if (!config.bingMapKey) {
             onError("map key must be provided");
+            return;
         }
 
         if (options && options.scale) {
