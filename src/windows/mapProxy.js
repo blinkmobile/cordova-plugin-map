@@ -171,11 +171,153 @@
         Microsoft.Maps.loadModule('Microsoft.Maps.Map', {callback: initMap, culture: "en-us", homeRegion: "AU"});
     };
 
+    // http://stackoverflow.com/a/9458996
+    function arrayBufferToBase64(buffer) {
+        var binary = "";
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        var i;
+
+        for (i = 0; i < len; i += 1) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    function buildStaticMapUrl(opts) {
+        var url = "https://dev.virtualearth.net/REST/v1/Imagery/Map/";
+        var i;
+
+        url += opts.imagerySet;
+        url += (opts.centerPoint) ? "/" + opts.centerPoint.toString() : "";
+        url += (opts.zoomLevel) ? "/" + opts.zoomLevel : "";
+
+        url += "?key=" + opts.key;
+        url += "&format=" + opts.format;
+
+        if (opts.pushpins) {
+            for (i = 0; i < opts.pushpins.length; i += 1) {
+                url += "&pushpin=" + opts.pushpins[i].slice(0,2).toString();
+                url += (opts.pushpins[i][2]) ? ";" + opts.pushpins[i][2]: "";
+                url += (opts.pushpins[i][3]) ? ";" + opts.pushpins[i][3]: "";
+            }
+        }
+
+        url += (opts.declutterPins) ? "&declutterPins=1" : "";
+        url += (opts.mapSize) ? "&mapSize=" + opts.mapSize.toString() : "";
+
+        return url;
+    }
+
+    map.getStaticMap = function (onSuccess, onError, options) {
+        var opts = {};
+
+        var isNonEmptyString = function (arg) {
+            return ((typeof arg === "string" || arg instanceof String) && arg.length > 0);
+        };
+
+        if (!options || (!options.centerPoint && !options.pushpins &&
+                !options.mapArea && !options.query &&
+                !(options.travelMode && options.waypoints))) {
+            onError("One of the following options must be provided: " +
+                    "centerPoint, pushpins");
+            return;
+        }
+
+        if (isNonEmptyString(options.bingMapKey)) {
+            opts["key"] = bingMapKey;
+        } else if (isNonEmptyString(config.bingMapKey)) {
+            opts["key"] = config.bingMapKey;
+        } else {
+            onError("map key not provided");
+            return;
+        }
+
+        if (isNonEmptyString(options.imagerySet)) {
+            ["Aerial", "AerialWithLabels", "Road", "OrdnanceSurvery",
+                "CollinsBart"].some(function (item) {
+                    if (item.toLowerCase() === options.imagerySet.toLowerCase()) {
+                        opts["imagerySet"] = item;
+                        return true;
+                    }
+                    return false;
+                });
+        }
+        opts["imagerySet"] = opts["imagerySet"] || "AerialWithLabels";
+
+        if (isNonEmptyString(options.format)) {
+            ["jpeg", "png", "gif"].some(function (item) {
+                if (item === options.format.toLowerCase()) {
+                    opts["format"] = item;
+                    return true;
+                }
+                return false;
+            });
+        }
+        opts["format"] = opts["format"] || "jpeg";
+
+        if (options.centerPoint &&
+                typeof options.centerPoint.slice === "function" &&
+                options.centerPoint.length === 2) {
+            opts["centerPoint"] = options.centerPoint;
+        }
+
+        if (typeof options.zoomLevel === "number" &&
+                options.zoomLevel >= 0 && options.zoomLevel <= 21) {
+            // must be an integer between 0 and 21
+            opts["zoomLevel"] = Math.round(options.zoomLevel);
+        }
+
+        if (opts.centerPoint && !opts.zoomLevel) {
+            opts["zoomLevel"] = 15;
+        }
+
+        if (options.pushpins &&
+                typeof options.pushpins.slice == "function" &&
+                options.pushpins.length > 0 && options.pushpins.length <= 18) {
+            // can only place 18 pushpins when using HTTP GET
+            opts["pushpins"] = options.pushpins;
+        }
+
+        if (typeof options.declutterPins !== "undefined") {
+            opts["declutterPins"] = !!options.declutterPins;
+        }
+
+        if (options.mapSize && typeof options.mapSize.slice == "function" &&
+                options.mapSize.length == 2) {
+            opts["mapSize"] = options.mapSize;
+        }
+
+        if (!opts["pushpins"] && !(opts["centerPoint"] && opts["zoomLevel"])) {
+            onError("One of the following options must be provided: " +
+                    "centerPoint, pushpins");
+            return;
+        }
+
+        WinJS.xhr({
+            "url": buildStaticMapUrl(opts),
+            "responseType": "arraybuffer"
+        }).done(
+            function (request) {
+                var base64;
+
+                if (request.status === 200 && request.response) {
+                    base64 = arrayBufferToBase64(request.response);
+                    onSuccess("data:image/" + opts.format + ";base64," + base64);
+                } else {
+                    onError("failed to get static map. HTTP status: " + request.status);
+                }
+            },
+            function (request) {
+                onError("failed to get static map. HTTP status: " + request.status);
+            });
+    };
     navigator.map = map;
 
 }());
 
 cordova.commandProxy.add("MapPlugin", {
   setOptions: navigator.map.setOptions,
-  confirmLocation: navigator.map.confirmLocation
+  confirmLocation: navigator.map.confirmLocation,
+  getStaticMap: navigator.map.getStaticMap
 });
