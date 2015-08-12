@@ -98,18 +98,21 @@
             config.latitude = options.latitude;
         } else if(!config.latitude) {
             onError("latitude must be provided");
+            return;
         }
         //check to see longitude is provided
         if (options && options.longitude) {
             config.longitude = options.longitude;
         } else if(!config.longitude) {
             onError("longitude must be provided");
+            return;
         }
         //check to see bingMapKey is available
         if (options && options.bingMapKey) {
             config.bingMapKey = options.bingMapKey;
         } else if (!config.bingMapKey) {
             onError("map key must be provided");
+            return;
         }
 
         if (options && options.scale) {
@@ -120,11 +123,12 @@
         callbacks.confirmOnError = onError;
         callbacks.confirmOptions = options;
 
-        openPopup();
-
-        while (typeof Microsoft == 'undefined' || !Microsoft) {
-            setTimeout('', 100);
+        if (typeof Microsoft === 'undefined' || !Microsoft) {
+            onError('bing maps API unavailable');
+            return;
         }
+
+        openPopup();
 
         initMap = function () {
             var bingMap, DisplayLoc;
@@ -167,11 +171,89 @@
         Microsoft.Maps.loadModule('Microsoft.Maps.Map', {callback: initMap, culture: "en-us", homeRegion: "AU"});
     };
 
+    // http://stackoverflow.com/a/9458996
+    function arrayBufferToBase64(buffer) {
+        var binary = "";
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        var i;
+
+        for (i = 0; i < len; i += 1) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    function buildStaticMapUrl(opts) {
+        var url = "https://dev.virtualearth.net/REST/v1/Imagery/Map/";
+        var i;
+
+        url += opts.imagerySet;
+        url += (opts.centerPoint) ? "/" + opts.centerPoint.toString() : "";
+        url += (opts.zoomLevel) ? "/" + opts.zoomLevel : "";
+
+        url += "?key=" + opts.bingMapKey;
+        url += (opts.format) ? "&format=" + opts.format : "";
+
+        if (opts.pushpins) {
+            for (i = 0; i < opts.pushpins.length; i += 1) {
+                url += "&pushpin=" + opts.pushpins[i].slice(0,2).toString();
+
+                if (opts.pushpins[i][2]) {
+                    url += ";" + opts.pushpins[i][2];
+                    url += (opts.pushpins[i][3]) ? ";" + opts.pushpins[i][3] : "";
+                } else if (opts.pushpins[i][3]) {
+                    url += ";;" + opts.pushpins[i][3];
+                }
+            }
+        }
+
+        url += (opts.declutterPins) ? "&declutterPins=1" : "";
+        url += (opts.mapSize) ? "&mapSize=" + opts.mapSize.toString() : "";
+
+        return url;
+    }
+
+    map.getStaticMap = function (onSuccess, onError, options) {
+        var isNonEmptyString = function (arg) {
+            return ((typeof arg === "string" || arg instanceof String) && arg.length > 0);
+        };
+
+        if (!isNonEmptyString(options.bingMapKey)) {
+            if (isNonEmptyString(config.bingMapKey)) {
+                options.bingMapKey = config.bingMapKey
+            } else {
+                onError("map key not provided");
+                return;
+            }
+        }
+
+        WinJS.xhr({
+            "url": buildStaticMapUrl(options),
+            "responseType": "arraybuffer"
+        }).done(
+            function (request) {
+                var base64;
+
+                if (request.status === 200 && request.response) {
+                    base64 = arrayBufferToBase64(request.response);
+                    onSuccess("data:image/" +
+                        ((options.format) ? options.format : "jpeg") +
+                        ";base64," + base64);
+                } else {
+                    onError("failed to get static map. HTTP status: " + request.status);
+                }
+            },
+            function (request) {
+                onError("failed to get static map. HTTP status: " + request.status);
+            });
+    };
     navigator.map = map;
 
 }());
 
 cordova.commandProxy.add("MapPlugin", {
   setOptions: navigator.map.setOptions,
-  confirmLocation: navigator.map.confirmLocation
+  confirmLocation: navigator.map.confirmLocation,
+  getStaticMap: navigator.map.getStaticMap
 });
