@@ -198,8 +198,13 @@
         if (opts.pushpins) {
             for (i = 0; i < opts.pushpins.length; i += 1) {
                 url += "&pushpin=" + opts.pushpins[i].slice(0,2).toString();
-                url += (opts.pushpins[i][2]) ? ";" + opts.pushpins[i][2]: "";
-                url += (opts.pushpins[i][3]) ? ";" + opts.pushpins[i][3]: "";
+
+                if (opts.pushpins[i][2]) {
+                    url += ";" + opts.pushpins[i][2];
+                    url += (opts.pushpins[i][3]) ? ";" + opts.pushpins[i][3] : "";
+                } else if (opts.pushpins[i][3]) {
+                    url += ";;" + opts.pushpins[i][3];
+                }
             }
         }
 
