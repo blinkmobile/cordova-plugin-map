@@ -17,7 +17,7 @@
             <merges target="" />
         </js-module>
         <asset src="www/css/cordova-plugin-map.css" target="css/cordova-plugin-map.css" />
-	    <lib-file src="Bing.Maps.JavaScript, Version=1.313.0825.1" target="win" versions=">=8.1"/>
+        <lib-file src="Bing.Maps.JavaScript, Version=1.313.0825.1" target="win" versions="8.1"/>
         <config-file target="package.appxmanifest" parent="/Package/Capabilities" versions=">=8.1.0">
             <DeviceCapability Name="location" />
         </config-file>

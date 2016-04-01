@@ -37,13 +37,21 @@
         head.appendChild(script);
     }
 
-    MSApp.execUnsafeLocalFunction(function () {
-        document.head.insertAdjacentHTML('beforeend', html);
-        appendVeapicoreJs();
+    function execInjection(fun){
+      if(MSApp.execUnsafeLocalFunction){
+        MSApp.execUnsafeLocalFunction(fun);
+      }else{
+        fun();
+      }
+    }
+
+    execInjection(function () {
+          document.head.insertAdjacentHTML('beforeend', html);
+          appendVeapicoreJs();
     });
 
     function openPopup() {
-        MSApp.execUnsafeLocalFunction(function () {
+        execInjection(function () {
             document.body.insertAdjacentHTML('beforeend', popupHtml);
         });
         var popup = document.getElementById('cordova-plugin-map-popup');
@@ -73,7 +81,7 @@
 
     function deletePopup() {
         window.removeEventListener('resize', resizePopup, false);
-        MSApp.execUnsafeLocalFunction(function () {
+        execInjection(function () {
             var popup = document.getElementById("cordova-plugin-map-popup");
             popup.classList.remove('cordova-plugin-map-nativePopUp-open');
             popup.parentNode.removeChild(popup);
